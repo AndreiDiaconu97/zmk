@@ -11,3 +11,10 @@ Check out the website to learn more: https://zmk.dev/.
 You can also come join our [ZMK Discord Server](https://zmk.dev/community/discord/invite).
 
 To review features, check out the [feature overview](https://zmk.dev/docs/). ZMK is under active development, and new features are listed with the [enhancement label](https://github.com/zmkfirmware/zmk/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement) in GitHub. Please feel free to add 👍 to the issue description of any requests to upvote the feature.
+
+---
+
+This is my fork with some experimental features merged. List of rebased features:
+- **mouse** (PR #778) - ftc's rebase: https://github.com/ftc/zmk/tree/mouse-ftc
+- **global-quick-tap-ms** (PR #1387) - PR branch: https://github.com/andrewjrae/zmk/tree/min-prior-ms
+-  bugfix(**unstuck sticky keys**) (PR #1636) - PR branch: https://github.com/metaeaux/zmk/tree/patch-1
