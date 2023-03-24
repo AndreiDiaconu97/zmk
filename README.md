@@ -21,3 +21,4 @@ This is my fork with some experimental features merged. List of rebased features
 - **leader key** ([#1380](https://github.com/zmkfirmware/zmk/pull/1380))
 - **turbo key**: repeating macro, can also be used to keep non-primary device awake ([#1414](https://github.com/zmkfirmware/zmk/pull/1414) and [#1413](https://github.com/zmkfirmware/zmk/pull/1413))
 - **dynamic macros** ([#1351](https://github.com/zmkfirmware/zmk/pull/1351))
+- **improve caps word** ([#1451](https://github.com/zmkfirmware/zmk/pull/1451))
