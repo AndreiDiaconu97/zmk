@@ -15,6 +15,7 @@ To review features, check out the [feature overview](https://zmk.dev/docs/). ZMK
 ---
 
 This is my fork with some experimental features merged. List of rebased features:
-- **mouse** (PR #778) - ftc's rebase: https://github.com/ftc/zmk/tree/mouse-ftc
-- **global-quick-tap-ms** (PR #1387) - PR branch: https://github.com/andrewjrae/zmk/tree/min-prior-ms
--  bugfix(**unstuck sticky keys**) (PR #1636) - PR branch: https://github.com/metaeaux/zmk/tree/patch-1
+- **mouse** ([#778](https://github.com/ftc/zmk/tree/mouse-ftc)) - ftc's rebase
+- **global-quick-tap-ms** ([#1387](https://github.com/andrewjrae/zmk/tree/min-prior-ms))
+-  bugfix(**unstuck sticky keys**) ([#1636](https://github.com/metaeaux/zmk/tree/patch-1))
+- **leader key** ([#1380](https://github.com/zmkfirmware/zmk/pull/1380))
