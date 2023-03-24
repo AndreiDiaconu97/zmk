@@ -19,3 +19,4 @@ This is my fork with some experimental features merged. List of rebased features
 - **global-quick-tap-ms** ([#1387](https://github.com/andrewjrae/zmk/tree/min-prior-ms))
 -  bugfix(**unstuck sticky keys**) ([#1636](https://github.com/metaeaux/zmk/tree/patch-1))
 - **leader key** ([#1380](https://github.com/zmkfirmware/zmk/pull/1380))
+- **turbo key**: repeating macro, can also be used to keep non-primary device awake ([#1414](https://github.com/zmkfirmware/zmk/pull/1414) and [#1413](https://github.com/zmkfirmware/zmk/pull/1413))
