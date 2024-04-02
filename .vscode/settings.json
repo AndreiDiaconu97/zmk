@@ -1,7 +1,9 @@
 {
   "files.associations": {
     "*.overlay": "dts",
-    "*.keymap": "dts"
+    "*.keymap": "dts",
+    "device.h": "c",
+    "log.h": "c"
   },
   "python.formatting.provider": "black",
   "[c]": {
@@ -18,5 +20,6 @@
   "[css][json][jsonc][html][markdown][yaml]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "cmake.configureOnOpen": true
 }

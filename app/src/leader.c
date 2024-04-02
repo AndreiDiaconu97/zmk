@@ -6,34 +6,34 @@
 
 #define DT_DRV_COMPAT zmk_leader_sequences
 
-#include <device.h>
 #include <drivers/behavior.h>
-#include <logging/log.h>
-#include <sys/dlist.h>
-#include <kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/dlist.h>
 
 #include <zmk/behavior.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/position_state_changed.h>
 #include <zmk/hid.h>
-#include <zmk/matrix.h>
 #include <zmk/keymap.h>
 #include <zmk/leader.h>
+#include <zmk/matrix.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-bool leader_status;
-int32_t press_count;
-int32_t release_count;
-int32_t timeout_ms;
-int32_t active_leader_position;
-int8_t layer;
-bool first_release;
+bool                    leader_status;
+int32_t                 press_count;
+int32_t                 release_count;
+int32_t                 timeout_ms;
+int32_t                 active_leader_position;
+int8_t                  layer;
+bool                    first_release;
 struct k_work_delayable release_timer;
-int64_t release_at;
-bool timer_started;
-bool timer_cancelled;
-bool timerless;
+int64_t                 release_at;
+bool                    timer_started;
+bool                    timer_cancelled;
+bool                    timerless;
 
 struct leader_seq_cfg {
     int32_t key_positions[CONFIG_ZMK_LEADER_MAX_KEYS_PER_SEQUENCE];
@@ -43,10 +43,10 @@ struct leader_seq_cfg {
     bool is_pressed;
     // the virtual key position is a key position outside the range used by the keyboard.
     // it is necessary so hold-taps can uniquely identify a behavior.
-    int32_t virtual_key_position;
+    int32_t                     virtual_key_position;
     struct zmk_behavior_binding behavior;
-    int32_t layers_len;
-    int8_t layers[];
+    int32_t                     layers_len;
+    int8_t                      layers[];
 };
 
 // leader_pressed_keys is filled with an event when a key is pressed.
@@ -57,9 +57,9 @@ const struct zmk_position_state_changed
 
 uint32_t current_sequence[CONFIG_ZMK_LEADER_MAX_KEYS_PER_SEQUENCE] = {-1};
 // the set of candidate leader based on the currently leader_pressed_keys
-int num_candidates;
+int                    num_candidates;
 struct leader_seq_cfg *sequence_candidates[CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY];
-int num_comp_candidates;
+int                    num_comp_candidates;
 struct leader_seq_cfg *completed_sequence_candidates[CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY];
 // a lookup dict that maps a key position to all sequences on that position
 struct leader_seq_cfg *sequence_lookup[ZMK_KEYMAP_LEN][CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY] = {
@@ -76,12 +76,12 @@ static int intitialiaze_leader_sequences(struct leader_seq_cfg *seq) {
         }
 
         struct leader_seq_cfg *new_seq = seq;
-        bool set = false;
+        bool                   set     = false;
         for (int j = 0; j < CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY; j++) {
             struct leader_seq_cfg *sequence_at_j = sequence_lookup[position][j];
             if (sequence_at_j == NULL) {
                 sequence_lookup[position][j] = new_seq;
-                set = true;
+                set                          = true;
                 break;
             }
             if (sequence_at_j->key_position_len < new_seq->key_position_len ||
@@ -91,12 +91,13 @@ static int intitialiaze_leader_sequences(struct leader_seq_cfg *seq) {
             }
             // put new_seq in this spot, move all other leader up.
             sequence_lookup[position][j] = new_seq;
-            new_seq = sequence_at_j;
+            new_seq                      = sequence_at_j;
         }
         if (!set) {
             LOG_ERR(
                 "Too many leader for key position %d, CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY %d.",
-                position, CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY);
+                position,
+                CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY);
             return -ENOMEM;
         }
     }
@@ -164,14 +165,14 @@ static bool all_keys_released() {
 
 static void clear_candidates() {
     for (int i = 0; i < CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY; i++) {
-        sequence_candidates[i] = NULL;
+        sequence_candidates[i]           = NULL;
         completed_sequence_candidates[i] = NULL;
     }
 }
 
 static void leader_find_candidates(int32_t position, int count) {
     clear_candidates();
-    num_candidates = 0;
+    num_candidates      = 0;
     num_comp_candidates = 0;
     for (int i = 0; i < CONFIG_ZMK_LEADER_MAX_SEQUENCES_PER_KEY; i++) {
         struct leader_seq_cfg *sequence = sequence_lookup[position][i];
@@ -194,7 +195,7 @@ const struct zmk_listener zmk_listener_leader;
 
 static inline int press_leader_behavior(struct leader_seq_cfg *sequence, int32_t timestamp) {
     struct zmk_behavior_binding_event event = {
-        .position = sequence->virtual_key_position,
+        .position  = sequence->virtual_key_position,
         .timestamp = timestamp,
     };
 
@@ -204,7 +205,7 @@ static inline int press_leader_behavior(struct leader_seq_cfg *sequence, int32_t
 
 static inline int release_leader_behavior(struct leader_seq_cfg *sequence, int32_t timestamp) {
     struct zmk_behavior_binding_event event = {
-        .position = sequence->virtual_key_position,
+        .position  = sequence->virtual_key_position,
         .timestamp = timestamp,
     };
 
@@ -222,7 +223,7 @@ static int stop_timer() {
 }
 
 static void reset_timer(int32_t timestamp) {
-    release_at = timestamp + timeout_ms;
+    release_at      = timestamp + timeout_ms;
     int32_t ms_left = release_at - k_uptime_get();
     if (ms_left > 0) {
         k_work_schedule(&release_timer, K_MSEC(ms_left));
@@ -232,14 +233,14 @@ static void reset_timer(int32_t timestamp) {
 
 void zmk_leader_activate(int32_t timeout, bool _timerless, uint32_t position) {
     LOG_DBG("leader key activated");
-    leader_status = true;
-    press_count = 0;
-    release_count = 0;
-    timeout_ms = timeout;
+    leader_status          = true;
+    press_count            = 0;
+    release_count          = 0;
+    timeout_ms             = timeout;
     active_leader_position = position;
-    layer = zmk_keymap_highest_layer_active();
-    first_release = false;
-    timerless = _timerless;
+    layer                  = zmk_keymap_highest_layer_active();
+    first_release          = false;
+    timerless              = _timerless;
     if (!timerless) {
         reset_timer(k_uptime_get());
     }
@@ -289,7 +290,7 @@ static int position_state_changed_listener(const zmk_event_t *ev) {
             leader_find_candidates(data->position, press_count);
             LOG_DBG("leader cands: %d comp: %d", num_candidates, num_comp_candidates);
             stop_timer();
-            current_sequence[press_count] = data->position;
+            current_sequence[press_count]    = data->position;
             leader_pressed_keys[press_count] = data;
             press_count++;
             for (int i = 0; i < num_comp_candidates; i++) {
@@ -337,16 +338,16 @@ static int position_state_changed_listener(const zmk_event_t *ev) {
 ZMK_LISTENER(leader, position_state_changed_listener);
 ZMK_SUBSCRIPTION(leader, zmk_position_state_changed);
 
-#define LEADER_INST(n)                                                                             \
-    static struct leader_seq_cfg sequence_config_##n = {                                           \
-        .virtual_key_position = ZMK_KEYMAP_LEN + __COUNTER__,                                      \
-        .immediate_trigger = DT_PROP(n, immediate_trigger),                                        \
-        .is_pressed = false,                                                                       \
-        .key_positions = DT_PROP(n, key_positions),                                                \
-        .key_position_len = DT_PROP_LEN(n, key_positions),                                         \
-        .behavior = ZMK_KEYMAP_EXTRACT_BINDING(0, n),                                              \
-        .layers = DT_PROP(n, layers),                                                              \
-        .layers_len = DT_PROP_LEN(n, layers),                                                      \
+#define LEADER_INST(n)                                            \
+    static struct leader_seq_cfg sequence_config_##n = {          \
+        .virtual_key_position = ZMK_KEYMAP_LEN + __COUNTER__,     \
+        .immediate_trigger    = DT_PROP(n, immediate_trigger),    \
+        .is_pressed           = false,                            \
+        .key_positions        = DT_PROP(n, key_positions),        \
+        .key_position_len     = DT_PROP_LEN(n, key_positions),    \
+        .behavior             = ZMK_KEYMAP_EXTRACT_BINDING(0, n), \
+        .layers               = DT_PROP(n, layers),               \
+        .layers_len           = DT_PROP_LEN(n, layers),           \
     };
 
 DT_INST_FOREACH_CHILD(0, LEADER_INST)
